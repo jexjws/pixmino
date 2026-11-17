@@ -7,6 +7,7 @@ local push = require("lib.push")
 local sfx = require("src.manager.sfx")
 local skin = require("src.manager.skin")
 local utils = require("src.utils.utils")
+local platform = require("src.utils.platform")
 
 local default_settings = {
     sound = {
@@ -258,6 +259,7 @@ Settings.menu = {
         {
             type = "toggle",
             text_key = "ALLOW_SCRIPT",
+            display = function() return not platform.is_web end,
             desc = "%s\r\n\n%s",
             desc_format = function(s)
                 return string.format(s, locale.get("ALLOW_SCRIPT_DESC"), locale.get("RESTART_TIP"))
@@ -279,6 +281,7 @@ Settings.menu = {
         {
             type = "toggle",
             text_key = "FULLSCREEN",
+            display = function() return not platform.is_web end,
             desc_key = "FULLSCREEN_DESC",
             get = function() return Settings.display.fullscreen end,
             set = function(v)

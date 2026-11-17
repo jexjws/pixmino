@@ -3,7 +3,8 @@
 
 local user_script = {}
 
-local nativefs = require("lib.nativefs")
+local platform = require("src.utils.platform")
+local nativefs = not platform.is_web and require("lib.nativefs") or nil
 local locale = require("src.manager.locale")
 
 local expose_modules = {
@@ -58,6 +59,7 @@ local function run_autoexec(config_dir)
 end
 
 function user_script.config_dir()
+    if not nativefs then return nil end
     local home = get_home()
     if not home then
         return nil

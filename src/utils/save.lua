@@ -9,6 +9,51 @@ local sfx = require("src.manager.sfx")
 local skin = require("src.manager.skin")
 local json = require("lib.json")
 local compatibility = require("src.utils.compatibility")
+local platform = require("src.utils.platform")
+
+local pending_flush
+
+local function read_optional(path)
+    if love.filesystem.getInfo(path, "file") then
+        return love.filesystem.read(path)
+    end
+end
+
+local function equal(a, b)
+    if type(a) ~= type(b) then return false end
+    if type(a) ~= "table" then return a == b end
+    for key, value in pairs(a) do
+        if not equal(value, b[key]) then return false end
+    end
+    for key in pairs(b) do
+        if a[key] == nil then return false end
+    end
+    return true
+end
+
+local function write_json(path, value)
+    local previous = read_optional(path)
+    if previous then
+        local ok, decoded = pcall(json.decode, previous)
+        if ok and equal(decoded, value) then return true end
+    end
+    local text = json.encode(value)
+    local ok, err = love.filesystem.write(path, text)
+    if not ok then
+        print("PIXMINO_SAVE_ERROR: " .. tostring(err))
+    end
+    return ok, err
+end
+
+function save.request_flush()
+    if platform.is_web then pending_flush = pending_flush or 0.25 end
+end
+
+function save.update(dt)
+    if not pending_flush then return end
+    pending_flush = pending_flush - dt
+    if pending_flush <= 0 then save.flush() end
+end
 
 local settings_file = "settings.json"
 local record_file = "record.json"
@@ -33,12 +78,12 @@ function save.flush_record()
             t[k] = v
         end
     end
-    love.filesystem.write(record_file, json.encode(t))
+    return write_json(record_file, t)
 end
 
 function save.load_record()
     Record = {}
-    local text = love.filesystem.read(record_file)
+    local text = read_optional(record_file)
     if text then
         local ok, decoded = pcall(json.decode, text)
         if ok and type(decoded) == "table" then
@@ -74,7 +119,7 @@ end
 
 function save.flush()
     local t = {}
-    local text = love.filesystem.read(settings_file)
+    local text = read_optional(settings_file)
     if text then
         local ok, decoded = pcall(json.decode, text)
         if ok and type(decoded) == "table" then
@@ -87,7 +132,9 @@ function save.flush()
         merge(t[root], settings[root])
     end
 
-    love.filesystem.write(settings_file, json.encode(t))
+    local ok, err = write_json(settings_file, t)
+    pending_flush = not ok and platform.is_web and 1 or nil
+    return ok, err
 end
 
 function save.load()
@@ -96,7 +143,7 @@ function save.load()
 
     local has_locale = false
 
-    local text = love.filesystem.read(settings_file)
+    local text = read_optional(settings_file)
     if text then
         local ok, decoded = pcall(json.decode, text)
         if ok and type(decoded) == "table" then
@@ -137,6 +184,10 @@ function save.load()
         settings.display.skin = "block"
     end
 
+    if platform.is_web then
+        settings.display.fullscreen = false
+        settings.game.allow_user_script = false
+    end
     local fullscreen = settings.display.fullscreen
 
     save.load_record()

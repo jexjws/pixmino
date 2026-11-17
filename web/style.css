@@ -1,0 +1,30 @@
+:root { color-scheme: dark; font: 16px/1.5 system-ui, sans-serif; background: #12141c; color: #eef0f7; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { width: min(1328px, 100%); margin: auto; padding: 24px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+h1 { margin: 0; letter-spacing: -.04em; font-size: 32px; }
+.subtitle, .help, footer { color: #a9aec5; font-size: 14px; }
+.subtitle { margin: 0; }
+.tag { border: 1px solid #42485d; padding: 4px 12px; border-radius: 20px; color: #bfc6df; font-size: 13px; }
+#player { position: relative; background: #07080b; border: 1px solid #343b52; border-radius: 8px; overflow: hidden; aspect-ratio: 16 / 9; display: grid; place-items: center; }
+/* Absolute positioning prevents intrinsic canvas dimensions feeding back into the grid height. */
+#canvas { position: absolute; inset: 0; display: block; width: 100% !important; height: 100% !important; object-fit: contain; image-rendering: pixelated; outline: none; }
+#canvas:focus-visible { outline: 2px solid #aab3ff; outline-offset: -3px; }
+#cover { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 24px; text-align: center; background: #151823ed; }
+#cover h2 { margin: 0; }
+#status { max-width: 560px; }
+[hidden] { display: none !important; }
+button { font: inherit; color: #eef0f7; background: #2a3047; border: 1px solid #59607c; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+button:hover:not(:disabled) { background: #3c4567; }
+button:focus-visible, a:focus-visible { outline: 2px solid #b6bfff; outline-offset: 3px; }
+button:disabled { opacity: .5; cursor: wait; }
+#start { color: #141827; background: #c0c8ff; border: 0; padding: 12px 28px; font-weight: 700; }
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+#save-status { flex: 1; min-width: 200px; margin: 0; color: #bbc3da; font-size: 14px; }
+#notice { color: #ffcf86; }
+.help { margin-top: 20px; }
+footer { border-top: 1px solid #30364b; padding-top: 16px; }
+a { color: #b6bfff; }
+#player:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; background: black; }
+@media (max-width: 600px) { main { padding: 12px; } header { margin-bottom: 12px; } h1 { font-size: 26px; } #cover { padding: 12px; font-size: 13px; } #cover h2 { font-size: 20px; } }

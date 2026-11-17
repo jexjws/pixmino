@@ -1,0 +1,17 @@
+{
+  "name": "pixmino-web",
+  "private": true,
+  "version": "0.1.3",
+  "packageManager": "pnpm@12.19.0",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "serve:web": "node scripts/serve-web.mjs",
+    "test:web": "node --test tests/web-runtime.test.mjs && lua5.1 tests/web-compat.lua && luajit tests/web-compat.lua",
+    "test:love": "node scripts/test-love.mjs",
+    "test:browser": "pnpm build:web && node scripts/test-love.mjs --web && node tests/browser.mjs"
+  },
+  "devDependencies": {
+    "love.js": "11.4.1",
+    "playwright": "1.65.1"
+  }
+}

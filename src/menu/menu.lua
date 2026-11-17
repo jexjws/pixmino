@@ -10,6 +10,7 @@ local save = require("src.utils.save")
 local dbg = require("src.game.debug")
 local sfx = require("src.manager.sfx")
 local modes = require("src.manager.mode")
+local platform = require("src.utils.platform")
 
 local menu = {}
 
@@ -27,7 +28,7 @@ local features = dbg.detect_features()
 local env_table = {
     love = love._version,
     lua = string.gsub(_VERSION:upper(), " ", "    "),
-    jit = jit.version:upper(),
+    jit = jit and jit.version:upper() or "N/A",
     os = love._os:upper(),
 }
 
@@ -49,6 +50,9 @@ function menu.go_to(new_state)
 end
 
 function menu.back()
+    if platform.is_web and menu.state:match("^MENU_SETTINGS") then
+        save.flush()
+    end
     local prev = table.remove(menu.history) or "MENU_MAIN"
     if prev == menu.state then return false end
     menu.selections[menu.state] = menu.selection
@@ -77,6 +81,7 @@ end
 function menu.set_language(lang)
     Settings.display.locale = lang
     locale.current = lang
+    if platform.is_web then save.flush() end
     menu.history = {}
     menu.selections = {}
     switch_to("MENU_MAIN")
@@ -208,6 +213,7 @@ menu.data = {
         {
             text_key = "QUIT",
             desc_key = "QUIT_DESC",
+            display = function() return not platform.is_web end,
             action = function()
                 love.event.quit()
             end
@@ -518,7 +524,7 @@ function menu.draw(gx, gy, pw, ph, bw)
     end
 end
 
-function menu.keypressed(key)
+local function handle_keypressed(key)
     local data = menu.get_visible_items(menu.state)
     if not data then return false end
 
@@ -608,6 +614,15 @@ function menu.keypressed(key)
     end
 
     return false
+end
+
+function menu.keypressed(key)
+    local editing = menu.state:match("^MENU_SETTINGS")
+    local handled = handle_keypressed(key)
+    if editing and handled and key ~= "escape" then
+        save.request_flush()
+    end
+    return handled
 end
 
 return menu

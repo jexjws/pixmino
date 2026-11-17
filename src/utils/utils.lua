@@ -29,22 +29,23 @@ function utils.strip_a(color)
     return { color[1], color[2], color[3] }
 end
 
-function utils.get_value_if_func_call(arg, ...)
-    if type(arg) == "function" then
-        return arg(...)
+-- Avoid the name `arg`: Lua 5.1 reserves it for legacy varargs.
+function utils.get_value_if_func_call(value, ...)
+    if type(value) == "function" then
+        return value(...)
     end
-    return arg
+    return value
 end
 
-function utils.resolve_deep(arg, ...)
-    if type(arg) == "function" then
-        return arg(...)
+function utils.resolve_deep(value, ...)
+    if type(value) == "function" then
+        return value(...)
     end
-    if type(arg) ~= "table" then
-        return arg
+    if type(value) ~= "table" then
+        return value
     end
     local out = {}
-    for k, v in pairs(arg) do
+    for k, v in pairs(value) do
         out[k] = utils.resolve_deep(v, ...)
     end
     return out

@@ -3,6 +3,7 @@
 
 GAMEVER = "v0.1.3"
 
+local platform = require("src.utils.platform")
 local push = require("lib.push")
 local vgafont = require("lib.vgafont")
 local menu = require("src.menu.menu")
@@ -97,7 +98,7 @@ function love.load()
     local fullscreen, has_locale = save.load()
     local _ = fullscreen and push:switchFullscreen()
 
-    if Settings.game.allow_user_script then
+    if not platform.is_web and Settings.game.allow_user_script then
         user_script.run()
     end
 
@@ -130,6 +131,7 @@ function love.draw()
 end
 
 function love.update(dt)
+    save.update(dt)
     win.resizeTimer = win.resizeTimer + dt
     if win.resizeTimer >= win.resizeInterval then
         win.resizeTimer = win.resizeTimer - win.resizeInterval
@@ -173,6 +175,7 @@ function love.keypressed(key)
     local k = Settings.input.keys
 
     if key == "f4" then
+        if platform.is_web then return end -- The page requests fullscreen during the user gesture.
         push:switchFullscreen()
         Settings.display.fullscreen = love.window.getFullscreen()
         return
@@ -264,6 +267,20 @@ function love.resize(w, h)
     push:resize(w, h)
 end
 
+local reset_frame_time = false
+
+function love.focus(focused)
+    if not platform.is_web then return end
+    reset_frame_time = true
+    input.reset()
+    if not focused then
+        save.flush()
+        if menu.state == "GAME" and game.started and not game.over and not game.cleared then
+            game.open_modal()
+        end
+    end
+end
+
 function love.quit()
     save.flush()
 end
@@ -301,6 +318,11 @@ function love.run()
             dt = love.timer.getDelta()
         end
 
+        if reset_frame_time then
+            dt, accumulator = 0, 0
+            reset_frame_time = false
+        end
+
         local is_updated = false
 
         if Settings.game.fixed_step then
@@ -328,6 +350,6 @@ function love.run()
             love.graphics.present()
         end
 
-        if love.timer then love.timer.sleep(0.001) end
+        if love.timer and not platform.is_web then love.timer.sleep(0.001) end
     end
 end
