@@ -61,22 +61,16 @@ async function toggleFullscreen() {
     notice.textContent = '';
   } catch (error) { notice.textContent = '此浏览器未允许全屏，可继续窗口游玩。'; console.warn(error); }
 }
-let resizeFrame = 0;
-function scheduleCanvasSize() {
-  cancelAnimationFrame(resizeFrame);
-  resizeFrame = requestAnimationFrame(() => {
-    if (!running) return;
-    const rect = canvas.getBoundingClientRect();
-    const width = Math.max(1, Math.round(rect.width)), height = Math.max(1, Math.round(rect.height));
-    if (canvas.width === width && canvas.height === height) return;
-    // This exported Emscripten helper updates the backing buffer and resize listeners.
-    window.Module.setCanvasSize(width, height);
-    window.dispatchEvent(new Event('resize'));
-  });
+// The runtime owns the canvas backing size: it tracks the element's CSS size multiplied by
+// devicePixelRatio. Calling Module.setCanvasSize() here with CSS pixels halves the backing store
+// on HiDPI screens (the framebuffer then no longer covers the visible area, so the game renders
+// black) and shifts the image after a fullscreen change. Only tell it the viewport changed, and
+// never listen to 'resize' ourselves: that would re-enter this handler forever.
+function notifyViewportChanged() {
+  if (running) window.dispatchEvent(new Event('resize'));
 }
-new ResizeObserver(scheduleCanvasSize).observe(byId('player'));
-document.addEventListener('fullscreenchange', scheduleCanvasSize);
-window.addEventListener('resize', scheduleCanvasSize);
+new ResizeObserver(notifyViewportChanged).observe(byId('player'));
+document.addEventListener('fullscreenchange', notifyViewportChanged);
 fullscreen.addEventListener('click', toggleFullscreen);
 canvas.addEventListener('pointerdown', () => { if (running) { canvas.focus(); unlockAudio(); } });
 canvas.addEventListener('contextmenu', event => event.preventDefault());
@@ -130,7 +124,7 @@ start.addEventListener('click', async () => {
       if (failed) return;
       running = true; clearTimeout(loadTimer); cover.hidden = true;
       fullscreen.disabled = false;
-      scheduleCanvasSize();
+      notifyViewportChanged();
       canvas.focus({ preventScroll: true });
       unlockAudio();
     }]
