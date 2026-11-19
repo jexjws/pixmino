@@ -90,5 +90,3 @@ export async function buildWeb() {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   buildWeb().catch(error => { console.error(error.message); process.exitCode = 1; });
 }
-
-export { upstreamStorage };

@@ -73,22 +73,4 @@ These are local saves, not cloud sync. Clearing site data removes them, changing
 
 Browsers require user interaction before sound can play. Click the canvas again if sound is suspended. love.js compatibility mode has upstream audio limitations; timing and output quality can differ from native LÖVE.
 
-### Validation
-
-```sh
-# Build/runtime/storage tests plus both Lua implementations:
-# requires zip, unzip, Lua 5.1 (lua5.1) and LuaJIT (luajit).
-pnpm test:web
-
-# Real native LÖVE rendering/gameplay smoke, with isolated temporary saves:
-# requires LÖVE; Linux uses SDL's offscreen video driver.
-pnpm test:love
-
-# Real Chromium and Firefox checks; download test browsers once:
-pnpm exec playwright install chromium firefox
-pnpm test:browser
-```
-
-The browser suite builds a separate `build/web-smoke/` test artifact and serves both test and release pages under subdirectories on a temporary localhost port. It checks language persistence across reload, starts gameplay, and runs the actual Lua/rendering smoke across all four languages, four skins and six built-in modes, basic piece operations, pause and save round trips. Results/screenshots go to `build/browser-results/`. **Deploy only `build/web/`, never the test artifact.** Build alone needs neither Lua interpreters, LÖVE nor the test browsers.
-
 The build applies narrowly matched patches to the pinned love.js runtime for storage initialization/error recovery and audio-context access. Upgrading love.js requires reviewing those source hooks; mismatches fail the build. Runtime sources and notices are available in the [upstream repository](https://github.com/Davidobot/love.js) and generated Web directory.
